@@ -1,9 +1,9 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const { PrismaClient } = require("@prisma/client");
-const validateAnswers = require("./middleware/validateAnswers");
-const jwt = require("jsonwebtoken");
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
+const validateAnswers = require('./middleware/validateAnswers');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -28,14 +28,14 @@ const PORT = 3500;
 // Middleware
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ error: "Token missing or invalid" });
+    return res.status(401).json({ error: 'Token missing or invalid' });
   }
 
-  jwt.verify(token, "your_jwt_secret", (err, decoded) => {
+  jwt.verify(token, 'your_jwt_secret', (err, decoded) => {
     if (err) {
-      return res.status(401).json({ error: "Invalid token" });
+      return res.status(401).json({ error: 'Invalid token' });
     }
     req.user = decoded.user; // Simpan informasi user ke request jika diperlukan nanti
     next();
@@ -43,15 +43,15 @@ const verifyToken = (req, res, next) => {
 };
 
 const authenticateToken = (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
+  const token = req.headers['authorization']?.split(' ')[1];
 
   if (!token) {
-    return res.status(403).json({ message: "Token not found" });
+    return res.status(403).json({ message: 'Token not found' });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: "Invalid token" });
+      return res.status(403).json({ message: 'Invalid token' });
     }
     req.user = decoded.user; // Attach user info to request object
     next();
@@ -61,8 +61,12 @@ const authenticateToken = (req, res, next) => {
 app.use(cors());
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the API' });
+});
+
 // Endpoint to fetch soal data
-app.get("/api/soal", async (req, res) => {
+app.get('/api/soal', async (req, res) => {
   try {
     const { page = 1, perPage = 1000, category_id } = req.query; // Pagination and filter params
     const skip = (page - 1) * perPage;
@@ -102,7 +106,7 @@ app.get("/api/soal", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -116,8 +120,8 @@ app.get('/api/soal/:id', async (req, res) => {
       where: { id: parseInt(id) },
       include: {
         exam_category: true,
-        category: true
-      }
+        category: true,
+      },
     });
 
     if (!soal) {
@@ -147,13 +151,13 @@ app.get('/api/soali/:soal_id', async (req, res) => {
     });
 
     if (!soal) {
-      return res.status(404).json({ error: "Soal not found" });
+      return res.status(404).json({ error: 'Soal not found' });
     }
 
     res.status(200).json(soal);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch soal" });
+    res.status(500).json({ error: 'Failed to fetch soal' });
   }
 });
 
@@ -221,27 +225,22 @@ app.get('/api/soali/:soal_id', async (req, res) => {
 //   }
 // });
 
-
-
-
-
-
 // Start the server
 
-app.post("/api/answers", async (req, res) => {
+app.post('/api/answers', async (req, res) => {
   const { user_id, soal_id, answers } = req.body;
 
   // Validasi request body
   if (!user_id || !soal_id || !Array.isArray(answers)) {
     return res.status(400).json({
       error:
-        "Invalid request. Ensure user_id, soal_id, and answers are provided.",
+        'Invalid request. Ensure user_id, soal_id, and answers are provided.',
     });
   }
 
   const soalId = parseInt(soal_id);
   if (isNaN(soalId)) {
-    return res.status(400).json({ error: "Invalid soal_id" });
+    return res.status(400).json({ error: 'Invalid soal_id' });
   }
 
   try {
@@ -253,7 +252,7 @@ app.post("/api/answers", async (req, res) => {
     if (!questions.length) {
       return res
         .status(404)
-        .json({ error: "No questions found for this soal_id" });
+        .json({ error: 'No questions found for this soal_id' });
     }
 
     // Proses jawaban dan hitung skor
@@ -281,16 +280,16 @@ app.post("/api/answers", async (req, res) => {
 
     // Kirim respons
     res.status(200).json({
-      message: "Answers submitted",
+      message: 'Answers submitted',
       score: Math.round(totalScore),
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.get("/api/riwayat/:soal_id", verifyToken, async (req, res) => {
+app.get('/api/riwayat/:soal_id', verifyToken, async (req, res) => {
   const { soal_id } = req.params;
   const { user_id } = req;
 
@@ -303,21 +302,21 @@ app.get("/api/riwayat/:soal_id", verifyToken, async (req, res) => {
     if (!history) {
       return res
         .status(404)
-        .json({ message: "History not found for this user and soal" });
+        .json({ message: 'History not found for this user and soal' });
     }
 
     // Mengirimkan riwayat jika ditemukan
     return res.status(200).json({
-      status: "success",
+      status: 'success',
       data: history,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
-app.get("/api/history", verifyToken, (req, res) => {
+app.get('/api/history', verifyToken, (req, res) => {
   const userId = req.user.id; // Dapatkan userId dari token
   const soalId = req.query.soalId;
 
@@ -327,13 +326,13 @@ app.get("/api/history", verifyToken, (req, res) => {
   );
 
   if (history.length === 0) {
-    return res.status(404).json({ message: "History not found" });
+    return res.status(404).json({ message: 'History not found' });
   }
 
   res.json(history);
 });
 
-app.get("/api/historya/:soalId", async (req, res) => {
+app.get('/api/historya/:soalId', async (req, res) => {
   // const userId = req.user.id; // Dapatkan userId dari token
   const { soalId } = req.params; // Ambil soalId dari parameter URL
 
@@ -344,25 +343,25 @@ app.get("/api/historya/:soalId", async (req, res) => {
         // user_id: userId, // Menggunakan user_id dari token
         soal_id: parseInt(soalId), // Menggunakan soal_id dari parameter URL
       },
-      include:{
-        soal: true
-      }
+      include: {
+        soal: true,
+      },
     });
 
     if (history.length === 0) {
-      return res.status(404).json({ message: "History not found" });
+      return res.status(404).json({ message: 'History not found' });
     }
 
     // Mengirimkan riwayat jika ditemukan
     res.json(history);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Endpoint untuk mendapatkan kunci jawaban
-app.get("/api/soal/kunci_jawaban/:id", async (req, res) => {
+app.get('/api/soal/kunci_jawaban/:id', async (req, res) => {
   try {
     const soalId = parseInt(req.params.id, 10);
 
@@ -378,7 +377,7 @@ app.get("/api/soal/kunci_jawaban/:id", async (req, res) => {
     });
 
     if (!soal) {
-      return res.status(404).json({ message: "Soal not found" });
+      return res.status(404).json({ message: 'Soal not found' });
     }
 
     const answers = soal.questions.map((question) => ({
@@ -389,12 +388,12 @@ app.get("/api/soal/kunci_jawaban/:id", async (req, res) => {
 
     res.json(answers);
   } catch (error) {
-    console.error("Error fetching answer keys:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching answer keys:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-app.post("/api/soal/rating/:id", async (req, res) => {
+app.post('/api/soal/rating/:id', async (req, res) => {
   const { id } = req.params; // ID soal
   const { rating, feedback } = req.body; // Rating dan feedback dari frontend
   try {
@@ -403,7 +402,7 @@ app.post("/api/soal/rating/:id", async (req, res) => {
       where: { id: parseInt(id) }, // Mengambil soal berdasarkan ID
     });
     if (!soalExists) {
-      return res.status(404).json({ error: "Soal not found" });
+      return res.status(404).json({ error: 'Soal not found' });
     }
     // Simpan feedback tanpa user_id
     const newRating = await prisma.feedback.create({
@@ -416,21 +415,21 @@ app.post("/api/soal/rating/:id", async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Rating submitted successfully", newRating });
+      .json({ message: 'Rating submitted successfully', newRating });
   } catch (error) {
-    console.error("Error saving rating:", error);
-    res.status(500).json({ error: "Failed to save rating" });
+    console.error('Error saving rating:', error);
+    res.status(500).json({ error: 'Failed to save rating' });
   }
 });
 
-app.post("/submit-rating", async (req, res) => {
+app.post('/submit-rating', async (req, res) => {
   const { soal_id, user_id, rating, feedback } = req.body;
 
   // Validasi data yang masuk
   if (!soal_id || !user_id || !rating) {
     return res
       .status(400)
-      .json({ error: "Missing soal_id, user_id, or rating" });
+      .json({ error: 'Missing soal_id, user_id, or rating' });
   }
 
   try {
@@ -444,19 +443,17 @@ app.post("/submit-rating", async (req, res) => {
       },
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Rating and feedback submitted successfully",
-        newFeedback,
-      });
+    res.status(200).json({
+      message: 'Rating and feedback submitted successfully',
+      newFeedback,
+    });
   } catch (error) {
-    console.error("Error submitting rating:", error);
-    res.status(500).json({ error: "Failed to submit rating" });
+    console.error('Error submitting rating:', error);
+    res.status(500).json({ error: 'Failed to submit rating' });
   }
 });
 
-app.get("/feedback/:soal_id", async (req, res) => {
+app.get('/feedback/:soal_id', async (req, res) => {
   const { soal_id } = req.params;
 
   try {
@@ -466,21 +463,21 @@ app.get("/feedback/:soal_id", async (req, res) => {
 
     res.status(200).json(feedbacks);
   } catch (error) {
-    console.error("Error fetching feedback:", error);
-    res.status(500).json({ error: "Failed to fetch feedback" });
+    console.error('Error fetching feedback:', error);
+    res.status(500).json({ error: 'Failed to fetch feedback' });
   }
 });
 
-app.post("/rating/:id", verifyToken, async (req, res) => {
+app.post('/rating/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { rating, feedback } = req.body;
   const userId = req.user.id; // Ambil dari token yang sudah diverifikasi
 
   if (!rating || rating < 1 || rating > 5) {
-    return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
   }
 
-  console.log("ID Soal:", id);
+  console.log('ID Soal:', id);
 
   try {
     const newRating = await prisma.feedback.create({
@@ -491,20 +488,20 @@ app.post("/rating/:id", verifyToken, async (req, res) => {
         feedback,
       },
     });
-    console.log("Data diterima oleh backend:", { rating, feedback, userId });
+    console.log('Data diterima oleh backend:', { rating, feedback, userId });
 
     res.status(200).json({
-      message: "Rating submitted successfully",
+      message: 'Rating submitted successfully',
       data: newRating,
     });
   } catch (error) {
-    console.log("Data diterima oleh backend:", { rating, feedback, userId });
-    console.error("Error saving rating:", error);
-    res.status(500).json({ error: "Failed to save rating" });
+    console.log('Data diterima oleh backend:', { rating, feedback, userId });
+    console.error('Error saving rating:', error);
+    res.status(500).json({ error: 'Failed to save rating' });
   }
 });
 
-app.get("/programs", async (req, res) => {
+app.get('/programs', async (req, res) => {
   const page = Number(req.query.page) || 1;
   const pageSize = Number(req.query.page_size) || 10;
   const skip = (page - 1) * pageSize;
@@ -517,7 +514,7 @@ app.get("/programs", async (req, res) => {
 
   res.json({
     status: 200,
-    message: "Berhasil mendapatkan list program",
+    message: 'Berhasil mendapatkan list program',
     errors: null,
     data: {
       page,
@@ -529,7 +526,7 @@ app.get("/programs", async (req, res) => {
   });
 });
 
-app.get("/programs/:id", async (req, res) => {
+app.get('/programs/:id', async (req, res) => {
   const { id } = req.params;
   const program = await prisma.program.findUnique({
     where: { id },
@@ -538,7 +535,7 @@ app.get("/programs/:id", async (req, res) => {
   if (!program) {
     return res.status(404).json({
       status: 404,
-      message: "Program tidak ditemukan",
+      message: 'Program tidak ditemukan',
       errors: null,
       data: null,
     });
@@ -546,35 +543,35 @@ app.get("/programs/:id", async (req, res) => {
 
   res.json({
     status: 200,
-    message: "Berhasil mendapatkan data program",
+    message: 'Berhasil mendapatkan data program',
     errors: null,
     data: program,
   });
 });
 
-app.get("/programs/:program_id/agenda", async (req, res) => {
+app.get('/programs/:program_id/agenda', async (req, res) => {
   try {
     const { program_id } = req.params;
 
     const agendas = await prisma.agendaProgram.findMany({
       where: { program_id },
-      orderBy: { start_date: "asc" },
+      orderBy: { start_date: 'asc' },
     });
 
     res.json({
       status: 200,
-      message: "Berhasil mendapatkan agenda program",
+      message: 'Berhasil mendapatkan agenda program',
       errors: null,
       data: agendas,
     });
   } catch (error) {
     res
       .status(500)
-      .json({ status: 500, message: "Server Error", errors: error });
+      .json({ status: 500, message: 'Server Error', errors: error });
   }
 });
 
-app.get("/programs/tryout/:program_id", async (req, res) => {
+app.get('/programs/tryout/:program_id', async (req, res) => {
   try {
     const { program_id } = req.params;
 
@@ -599,11 +596,11 @@ app.get("/programs/tryout/:program_id", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-app.get("/programs/tryout/detail/:id", async (req, res) => {
+app.get('/programs/tryout/detail/:id', async (req, res) => {
   try {
     const { id } = req.params;
     // const { program_id } = req.params;
@@ -618,17 +615,17 @@ app.get("/programs/tryout/detail/:id", async (req, res) => {
     });
 
     if (!soal) {
-      return res.status(404).json({ error: "Soal not found" });
+      return res.status(404).json({ error: 'Soal not found' });
     }
 
     res.json(soal);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-app.get("/programs/soali/:soal_id", async (req, res) => {
+app.get('/programs/soali/:soal_id', async (req, res) => {
   const { soal_id } = req.params;
 
   try {
@@ -644,30 +641,30 @@ app.get("/programs/soali/:soal_id", async (req, res) => {
     });
 
     if (!soal) {
-      return res.status(404).json({ error: "Soal not found" });
+      return res.status(404).json({ error: 'Soal not found' });
     }
 
     res.status(200).json(soal);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch soal" });
+    res.status(500).json({ error: 'Failed to fetch soal' });
   }
 });
 
-app.post("/programs/answers", async (req, res) => {
+app.post('/programs/answers', async (req, res) => {
   const { user_id, soal_id, answers } = req.body;
 
   // Validasi request body
   if (!user_id || !soal_id || !Array.isArray(answers)) {
     return res.status(400).json({
       error:
-        "Invalid request. Ensure user_id, soal_id, and answers are provided.",
+        'Invalid request. Ensure user_id, soal_id, and answers are provided.',
     });
   }
 
   const soalId = parseInt(soal_id);
   if (isNaN(soalId)) {
-    return res.status(400).json({ error: "Invalid soal_id" });
+    return res.status(400).json({ error: 'Invalid soal_id' });
   }
 
   try {
@@ -679,7 +676,7 @@ app.post("/programs/answers", async (req, res) => {
     if (!questions.length) {
       return res
         .status(404)
-        .json({ error: "No questions found for this soal_id" });
+        .json({ error: 'No questions found for this soal_id' });
     }
 
     // Proses jawaban dan hitung skor
@@ -707,16 +704,16 @@ app.post("/programs/answers", async (req, res) => {
 
     // Kirim respons
     res.status(200).json({
-      message: "Answers submitted",
+      message: 'Answers submitted',
       score: Math.round(totalScore),
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.get("/programs/historya/:soalId", async (req, res) => {
+app.get('/programs/historya/:soalId', async (req, res) => {
   // const userId = req.user.id; // Dapatkan userId dari token
   const { soalId } = req.params; // Ambil soalId dari parameter URL
 
@@ -733,14 +730,14 @@ app.get("/programs/historya/:soalId", async (req, res) => {
     });
 
     if (history.length === 0) {
-      return res.status(404).json({ message: "History not found" });
+      return res.status(404).json({ message: 'History not found' });
     }
 
     // Mengirimkan riwayat jika ditemukan
     res.json(history);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -778,12 +775,12 @@ app.get("/programs/historya/:soalId", async (req, res) => {
 //   }
 // });
 
-app.get("/programs/soal/kunci_jawaban/:id", async (req, res) => {
+app.get('/programs/soal/kunci_jawaban/:id', async (req, res) => {
   try {
     const soalId = parseInt(req.params.id, 10);
 
     if (isNaN(soalId)) {
-      return res.status(400).json({ message: "Invalid soal ID" });
+      return res.status(400).json({ message: 'Invalid soal ID' });
     }
 
     // Ambil data soal berdasarkan ID
@@ -800,7 +797,7 @@ app.get("/programs/soal/kunci_jawaban/:id", async (req, res) => {
 
     // Jika soal tidak ditemukan
     if (!soal) {
-      return res.status(404).json({ message: "Soal not found" });
+      return res.status(404).json({ message: 'Soal not found' });
     }
 
     // Susun data kunci jawaban
@@ -816,12 +813,12 @@ app.get("/programs/soal/kunci_jawaban/:id", async (req, res) => {
 
     res.json({ soalId: soal.id, title: soal.title, answers });
   } catch (error) {
-    console.error("Error fetching answer keys:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Error fetching answer keys:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-app.get("/materi/:programId", async (req, res) => {
+app.get('/materi/:programId', async (req, res) => {
   try {
     const { programId } = req.params;
 
@@ -829,15 +826,15 @@ app.get("/materi/:programId", async (req, res) => {
       where: { programId },
     });
 
-    console.log("Materi ditemukan:", materi); // Cek apakah data ditemukan
+    console.log('Materi ditemukan:', materi); // Cek apakah data ditemukan
     res.json({ success: true, data: materi });
   } catch (error) {
-    console.error("Error fetching materi:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error('Error fetching materi:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
-app.get("/api/historyall", async (req, res) => {
+app.get('/api/historyall', async (req, res) => {
   try {
     // Ambil semua riwayat dengan score di bawah 50
     const history = await prisma.history.findMany({
@@ -854,17 +851,15 @@ app.get("/api/historyall", async (req, res) => {
     if (history.length === 0) {
       return res
         .status(404)
-        .json({ message: "Tidak ada riwayat dengan skor di bawah 50" });
+        .json({ message: 'Tidak ada riwayat dengan skor di bawah 50' });
     }
 
     res.json(history);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
