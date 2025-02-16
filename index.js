@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = 3500;
+const PORT = 3000;
 
 // const verifyToken = (req, res, next) => {
 //   const token = req.header("Authorization")?.replace("Bearer ", ""); // Mengambil token dari header Authorization
